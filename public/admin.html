@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN PANEL - FULL CONTROL</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background:#f1f5f9; font-family:sans-serif; }
+        .glass { background:white; border:1px solid #e2e8f0; }
+        .input-field { border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; width: 100%; transition: border 0.2s; }
+        .input-field:focus { border-color: #6366f1; outline: none; ring: 2px ring-indigo-100; }
+        #login-overlay { position: fixed; inset: 0; background: white; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        #main-content { display: none; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+<div id="login-overlay">
+    <div class="text-center p-8 glass rounded-3xl shadow-xl max-w-sm w-full">
+        <h2 class="text-xl font-bold mb-4">ADMIN ACCESS</h2>
+        <input type="password" id="pass-input" placeholder="Password" class="input-field mb-4 p-3 text-lg text-center">
+        <button onclick="checkPass()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">UNLOCK SYSTEM</button>
+    </div>
+</div>
+
+<div id="main-content" class="max-w-6xl mx-auto">
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 uppercase">Art's Fest <span class="text-indigo-600">Admin</span></h1>
+            <p class="text-xs font-bold text-slate-400">CONTROL CENTER</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+                <span class="text-[10px] font-bold text-slate-500 uppercase">Auto-Calculate</span>
+                <button id="calc-toggle" onclick="toggleCalcMode()" class="bg-indigo-600 text-white px-3 py-1 rounded-md text-[10px] font-bold">ON</button>
+            </div>
+            <button onclick="saveData()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-10 py-3 rounded-xl font-bold shadow-lg transition-all">SAVE & BROADCAST LIVE</button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="space-y-6">
+            <div class="glass p-6 rounded-2xl shadow-sm">
+                <h3 class="font-bold mb-4 text-xs uppercase text-indigo-600">Main Team Scores</h3>
+                <div id="admin-main-grid" class="space-y-4"></div>
+            </div>
+
+            <div class="bg-indigo-900 p-6 rounded-2xl shadow-sm text-white">
+                <h3 class="font-bold mb-2 uppercase text-xs">Bulk Import</h3>
+                <textarea id="bulk-input" rows="3" class="w-full p-3 rounded-lg text-black text-xs mb-3" placeholder="Name, Team"></textarea>
+                <button onclick="importBulk(currentCat)" class="w-full bg-indigo-700 hover:bg-indigo-600 p-2 rounded text-[10px] font-bold">IMPORT TO CURRENT CATEGORY</button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 space-y-4">
+            <div class="glass p-6 rounded-2xl shadow-sm">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                    <div class="flex gap-2">
+                        <button onclick="renderAdminCat('subJunior')" id="btn-subJunior" class="cat-btn px-4 py-2 rounded-lg text-[10px] font-bold">SUB-JUNIOR</button>
+                        <button onclick="renderAdminCat('junior')" id="btn-junior" class="cat-btn px-4 py-2 rounded-lg text-[10px] font-bold">JUNIOR</button>
+                        <button onclick="renderAdminCat('senior')" id="btn-senior" class="cat-btn px-4 py-2 rounded-lg text-[10px] font-bold">SENIOR</button>
+                    </div>
+                    
+                    <div class="relative w-full md:w-64">
+                        <input type="text" id="admin-search" oninput="renderAdminCat(currentCat)" placeholder="Search participant..." class="input-field pl-10 text-xs">
+                        <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                    </div>
+                </div>
+
+                <div id="admin-cat-editor" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const socket = io();
+    let currentCat = 'subJunior';
+    let isAutoCalc = true;
+    let festData = {
+        overall: [{ name: "ASKARIYYA", points: 0 }, { name: "KUTHAIBA", points: 0 }],
+        categories: { subJunior: [], junior: [], senior: [] }
+    };
+
+    function checkPass() {
+        if(document.getElementById('pass-input').value === "783asu") {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            renderAdminCat(currentCat);
+        } else { alert("Wrong Password"); }
+    }
+
+    function toggleCalcMode() {
+        isAutoCalc = !isAutoCalc;
+        const btn = document.getElementById('calc-toggle');
+        btn.innerText = isAutoCalc ? "ON" : "OFF (MANUAL)";
+        btn.className = isAutoCalc ? "bg-indigo-600 text-white px-3 py-1 rounded-md text-[10px] font-bold" : "bg-red-500 text-white px-3 py-1 rounded-md text-[10px] font-bold";
+        if(isAutoCalc) autoCalculate();
+        else updateMainUI();
+    }
+
+    socket.on('initData', (data) => { 
+        festData = data; 
+        if(isAutoCalc) autoCalculate();
+        else { updateMainUI(); renderAdminCat(currentCat); }
+    });
+
+    function autoCalculate() {
+        if(!isAutoCalc) return;
+        let totals = { "ASKARIYYA": 0, "KUTHAIBA": 0 };
+        Object.keys(festData.categories).forEach(cat => {
+            festData.categories[cat].forEach(p => {
+                const team = p.team.toUpperCase().trim();
+                if (totals.hasOwnProperty(team)) totals[team] += (parseInt(p.pts) || 0);
+            });
+        });
+        festData.overall.forEach(t => t.points = totals[t.name] || 0);
+        updateMainUI();
+        renderAdminCat(currentCat);
+    }
+
+    function updateMainUI() {
+        document.getElementById('admin-main-grid').innerHTML = festData.overall.map((t, i) => `
+            <div>
+                <label class="text-[10px] font-black text-slate-500 uppercase">${t.name}</label>
+                <input type="number" value="${t.points}" 
+                    ${isAutoCalc ? 'disabled' : ''} 
+                    onchange="festData.overall[${i}].points = parseInt(this.value) || 0" 
+                    class="input-field font-black text-xl text-indigo-600 ${isAutoCalc ? 'bg-slate-50 opacity-70 cursor-not-allowed' : 'bg-white'}">
+                ${isAutoCalc ? '<p class="text-[8px] text-indigo-400 mt-1 uppercase">Synced with participants</p>' : ''}
+            </div>
+        `).join('');
+    }
+
+    function renderAdminCat(catId) {
+        currentCat = catId;
+        const search = document.getElementById('admin-search').value.toLowerCase();
+        
+        document.querySelectorAll('.cat-btn').forEach(btn => btn.className = 'cat-btn px-4 py-2 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600');
+        if(document.getElementById('btn-' + catId)) {
+            document.getElementById('btn-' + catId).className = 'cat-btn px-4 py-2 rounded-lg text-[10px] font-bold bg-indigo-600 text-white';
+        }
+
+        const filtered = (festData.categories[catId] || []).map((p, originalIndex) => ({...p, originalIndex}))
+            .filter(p => p.name.toLowerCase().includes(search) || p.team.toLowerCase().includes(search));
+
+        let html = `
+            <div class="grid grid-cols-12 gap-2 mb-2 text-[9px] font-bold text-slate-400 uppercase px-2">
+                <div class="col-span-1">#</div><div class="col-span-5">Name</div><div class="col-span-3">Team</div><div class="col-span-3">Points</div>
+            </div>
+        `;
+
+        html += filtered.map((p) => `
+            <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-slate-100">
+                <div class="col-span-1 text-[10px] font-bold text-slate-300">${p.originalIndex + 1}</div>
+                <div class="col-span-5"><input type="text" value="${p.name}" onchange="festData.categories['${catId}'][${p.originalIndex}].name = this.value" class="input-field text-xs text-left font-medium"></div>
+                <div class="col-span-3"><input type="text" value="${p.team}" onchange="festData.categories['${catId}'][${p.originalIndex}].team = this.value.toUpperCase(); if(isAutoCalc) autoCalculate();" class="input-field text-[10px] uppercase"></div>
+                <div class="col-span-3"><input type="number" value="${p.pts}" onchange="festData.categories['${catId}'][${p.originalIndex}].pts = parseInt(this.value) || 0; if(isAutoCalc) autoCalculate();" class="input-field font-bold text-indigo-600"></div>
+            </div>
+        `).join('');
+
+        document.getElementById('admin-cat-editor').innerHTML = html || '<p class="text-center py-10 text-slate-400 text-xs">No matches found.</p>';
+    }
+
+    function importBulk(catId) {
+        const text = document.getElementById('bulk-input').value;
+        const lines = text.split('\n');
+        lines.forEach(line => {
+            if(line.includes(',')) {
+                const [name, team] = line.split(',');
+                festData.categories[catId].push({ name: name.trim(), team: team.trim().toUpperCase(), pts: 0 });
+            }
+        });
+        document.getElementById('bulk-input').value = "";
+        if(isAutoCalc) autoCalculate();
+        else renderAdminCat(currentCat);
+    }
+
+    function saveData() {
+        socket.emit('updateData', festData);
+        alert("Broadcast Success! MongoDB Updated.");
+    }
+</script>
+</body>
+</html>
