@@ -1,7 +1,7 @@
 {
   "name": "fest-leaderboard",
   "version": "1.0.0",
-  "description": "Arqamiyya Art's Fest Leaderboard",
+  "description": "Live Leaderboard with MongoDB",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,8 +10,5 @@
     "express": "^4.18.2",
     "mongoose": "^8.0.0",
     "socket.io": "^4.7.2"
-  },
-  "engines": {
-    "node": "22.16.0"
   }
 }
