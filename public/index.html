@@ -15,8 +15,6 @@
         .rank-1 { background: #fef3c7; color: #b45309; border: 1px solid #fbbf24; }
         .rank-2 { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
         .rank-3 { background: #ffedd5; color: #9a3412; border: 1px solid #fb923c; }
-        
-        /* Smooth transition for search filtering */
         #overall-body > div { transition: all 0.3s ease; }
     </style>
 </head>
@@ -41,15 +39,14 @@
 </div>
 
 <div class="w-full max-w-7xl space-y-6 mb-20" id="overall-section">
-    <div id="overall-body" class="space-y-6">
-        </div>
+    <div id="overall-body" class="space-y-6"></div>
 </div>
 
-<div class="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<div class="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
     <div id="cat-subJunior"></div>
     <div id="cat-junior"></div>
     <div id="cat-senior"></div>
-</div>
+    <div id="cat-general"></div> </div>
 
 <footer class="mt-20 pb-10 text-slate-400 text-[10px] font-bold tracking-widest uppercase">
     &copy; 2026 Arqamiyya Arts Fest • Live Updates Enabled
@@ -64,21 +61,17 @@
             { name: "Team Ruby", points: 0 },
             { name: "Team Sapphire", points: 0 }
         ], 
-        categories: { subJunior: [], junior: [], senior: [] } 
+        categories: { subJunior: [], junior: [], senior: [], general: [] } // Added general category
     };
 
-    // Socket listeners
     socket.on('initData', (data) => { festData = data; render(); });
     socket.on('dataChanged', (data) => { festData = data; render(); });
 
     function render() {
         const searchTerm = document.getElementById('search-input').value.toLowerCase();
         const overallSection = document.getElementById('overall-section');
-        
-        // Hide overall stats when searching to focus on individual results
         overallSection.style.display = searchTerm ? 'none' : 'block';
 
-        // 1. Render Team Totals (Enlarged)
         if (!searchTerm && festData.overall) {
             const sortedOverall = [...festData.overall].sort((a,b) => b.points - a.points);
             document.getElementById('overall-body').innerHTML = sortedOverall.map((t,i) => `
@@ -92,11 +85,11 @@
             `).join('');
         }
 
-        // 2. Render Categories
         const cats = [
             { id: 'subJunior', label: 'SUB-JUNIOR' },
             { id: 'junior', label: 'JUNIOR' },
-            { id: 'senior', label: 'SENIOR' }
+            { id: 'senior', label: 'SENIOR' },
+            { id: 'general', label: 'GENERAL' } // Added General to loop
         ];
 
         cats.forEach(cat => {
@@ -158,13 +151,8 @@
         });
     }
 
-    // Live indicator animation
     gsap.to("#live-indicator", { opacity: 0.2, repeat: -1, yoyo: true, duration: 0.8 });
-    
-    // Initial call for placeholder display
     render();
 </script>
 </body>
 </html>
-
-
