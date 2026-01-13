@@ -51,17 +51,18 @@
             <div class="bg-indigo-900 p-6 rounded-2xl shadow-sm text-white">
                 <h3 class="font-bold mb-2 uppercase text-xs">Bulk Import</h3>
                 <textarea id="bulk-input" rows="3" class="w-full p-3 rounded-lg text-black text-xs mb-3" placeholder="Name, Team"></textarea>
-                <button onclick="importBulk(currentCat)" class="w-full bg-indigo-700 hover:bg-indigo-600 p-2 rounded text-[10px] font-bold">IMPORT TO CURRENT CATEGORY</button>
+                <button onclick="importBulk(currentCat)" class="w-full bg-indigo-700 hover:bg-indigo-600 p-2 rounded text-[10px] font-bold uppercase">Import to <span id="import-label">Sub-Junior</span></button>
             </div>
         </div>
 
         <div class="lg:col-span-2 space-y-4">
             <div class="glass p-6 rounded-2xl shadow-sm">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 flex-wrap">
                         <button onclick="renderAdminCat('subJunior')" id="btn-subJunior" class="cat-btn px-4 py-2 rounded-lg text-[10px] font-bold">SUB-JUNIOR</button>
                         <button onclick="renderAdminCat('junior')" id="btn-junior" class="cat-btn px-4 py-2 rounded-lg text-[10px] font-bold">JUNIOR</button>
                         <button onclick="renderAdminCat('senior')" id="btn-senior" class="cat-btn px-4 py-2 rounded-lg text-[10px] font-bold">SENIOR</button>
+                        <button onclick="renderAdminCat('general')" id="btn-general" class="cat-btn px-4 py-2 rounded-lg text-[10px] font-bold">GENERAL</button>
                     </div>
                     
                     <div class="relative w-full md:w-64">
@@ -80,9 +81,11 @@
     const socket = io();
     let currentCat = 'subJunior';
     let isAutoCalc = true;
+    
+    // Updated structure to include General
     let festData = {
         overall: [{ name: "ASKARIYYA", points: 0 }, { name: "KUTHAIBA", points: 0 }],
-        categories: { subJunior: [], junior: [], senior: [] }
+        categories: { subJunior: [], junior: [], senior: [], general: [] }
     };
 
     function checkPass() {
@@ -111,12 +114,15 @@
     function autoCalculate() {
         if(!isAutoCalc) return;
         let totals = { "ASKARIYYA": 0, "KUTHAIBA": 0 };
+        
+        // This loop now covers Sub-Junior, Junior, Senior, and General
         Object.keys(festData.categories).forEach(cat => {
             festData.categories[cat].forEach(p => {
                 const team = p.team.toUpperCase().trim();
                 if (totals.hasOwnProperty(team)) totals[team] += (parseInt(p.pts) || 0);
             });
         });
+        
         festData.overall.forEach(t => t.points = totals[t.name] || 0);
         updateMainUI();
         renderAdminCat(currentCat);
@@ -139,6 +145,9 @@
         currentCat = catId;
         const search = document.getElementById('admin-search').value.toLowerCase();
         
+        // Update the Import Label
+        document.getElementById('import-label').innerText = catId.charAt(0).toUpperCase() + catId.slice(1);
+
         document.querySelectorAll('.cat-btn').forEach(btn => btn.className = 'cat-btn px-4 py-2 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600');
         if(document.getElementById('btn-' + catId)) {
             document.getElementById('btn-' + catId).className = 'cat-btn px-4 py-2 rounded-lg text-[10px] font-bold bg-indigo-600 text-white';
@@ -181,7 +190,7 @@
 
     function saveData() {
         socket.emit('updateData', festData);
-        alert("Broadcast Success! MongoDB Updated.");
+        alert("Broadcast Success! System Sync Complete.");
     }
 </script>
 </body>
