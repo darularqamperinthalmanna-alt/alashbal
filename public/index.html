@@ -1,169 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARQAMIYYA ART'S FEST LIVE RESULT</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <style>
-        body { background:#ffffff; color:black; font-family:'Arial',sans-serif; overflow-x: hidden; }
-        .glass { background:rgba(0,0,0,0.03); backdrop-filter:blur(14px); border:1px solid rgba(0,0,0,0.08); }
-        .live-dot { width:12px; height:12px; background:red; border-radius:50%; display:inline-block; margin-left:8px; box-shadow: 0 0 10px red; }
-        .top-badge { font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 99px; }
-        .rank-1 { background: #fef3c7; color: #b45309; border: 1px solid #fbbf24; }
-        .rank-2 { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-        .rank-3 { background: #ffedd5; color: #9a3412; border: 1px solid #fb923c; }
-        
-        /* Smooth transition for search filtering */
-        #overall-body > div { transition: all 0.3s ease; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARQAMIYYA ART'S FEST | LIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            --emerald: #10b981;
+            --ruby: #ef4444;
+            --sapphire: #3b82f6;
+        }
+        body { 
+            background: #f8fafc; 
+            color: #0f172a; 
+            font-family: 'Inter', sans-serif; 
+            overflow-x: hidden; 
+        }
+        .glass { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+        }
+        .live-dot { 
+            width: 10px; height: 10px; background: #ff0000; 
+            border-radius: 50%; display: inline-block; 
+            box-shadow: 0 0 12px #ff0000; 
+        }
+        .rank-1 { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border: 1px solid #f59e0b; }
+        .rank-2 { background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); color: #475569; border: 1px solid #94a3b8; }
+        .rank-3 { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #9a3412; border: 1px solid #f97316; }
+        
+        .team-card { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .team-card:hover { transform: translateY(-4px); }
+        
+        /* Team specific accent borders */
+        .border-emerald { border-left: 12px solid var(--emerald); }
+        .border-ruby { border-left: 12px solid var(--ruby); }
+        .border-sapphire { border-left: 12px solid var(--sapphire); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
 </head>
 
-<body class="min-h-screen flex flex-col items-center py-8 px-4">
+<body class="min-h-screen pb-20">
 
-<header class="w-full max-w-7xl flex flex-col items-center gap-3 mb-12 text-center">
-    <img src="art.png" class="w-56 mb-2" alt="Logo" onerror="this.src='https://via.placeholder.com/200x80?text=ARTS+FEST'">
-    <h1 class="text-4xl md:text-6xl font-black uppercase tracking-tighter">
-        ARQAMIYYA ART'S<span class="text-indigo-600"> FEST</span>
-        <span class="live-dot" id="live-indicator"></span>
-    </h1>
-    <p class="text-indigo-700 tracking-[0.4em] text-xs font-bold uppercase mt-2">Live Leaderboard 2026</p>
-</header>
+<nav class="sticky top-0 z-50 glass border-b border-slate-200/50 py-4 px-6 mb-8">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <img src="art.png" class="h-10 w-auto" alt="Logo" onerror="this.src='https://via.placeholder.com/40x40?text=A'">
+            <span class="font-black tracking-tighter text-xl uppercase italic">Arqamiyya <span class="text-indigo-600">Arts</span></span>
+        </div>
+        <div class="flex items-center gap-2 bg-red-50 px-3 py-1 rounded-full border border-red-100">
+            <span class="live-dot" id="live-indicator"></span>
+            <span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Live Results</span>
+        </div>
+    </div>
+</nav>
 
-<div class="w-full max-w-7xl mb-12 flex justify-start">
-    <div class="w-full max-w-md">
-        <label class="block text-[10px] font-black uppercase text-slate-400 ml-2 mb-2 tracking-widest">Quick Search</label>
-        <input type="text" id="search-input" oninput="render()" placeholder="Search participant or team..." 
-               class="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 shadow-sm outline-none transition-all">
-    </div>
-</div>
+<main class="max-w-7xl mx-auto px-4">
+    <header class="text-center mb-12">
+        <h1 class="text-5xl md:text-7xl font-[900] uppercase tracking-tighter mb-2">Leader<span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">board</span></h1>
+        <p class="text-slate-500 font-bold tracking-[0.3em] text-xs uppercase">Annual Arts Festival 2026</p>
+    </header>
 
-<div class="w-full max-w-7xl space-y-6 mb-20" id="overall-section">
-    <div id="overall-body" class="space-y-6">
-        </div>
-</div>
+    <div class="flex justify-center mb-16">
+        <div class="w-full max-w-2xl relative">
+            <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <input type="text" id="search-input" oninput="render()" placeholder="Search by participant or team name..." 
+                   class="w-full pl-14 pr-6 py-5 rounded-3xl border-0 ring-1 ring-slate-200 focus:ring-4 focus:ring-indigo-500/20 shadow-xl outline-none transition-all text-lg">
+        </div>
+    </div>
 
-<div class="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-    <div id="cat-subJunior"></div>
-    <div id="cat-junior"></div>
-    <div id="cat-senior"></div>
-</div>
+    <section id="overall-section" class="mb-20">
+        <div class="flex items-center gap-4 mb-8">
+            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Championship Standings</h2>
+            <div class="h-[1px] flex-grow bg-slate-200"></div>
+        </div>
+        <div id="overall-body" class="grid grid-cols-1 gap-6">
+            </div>
+    </section>
 
-<footer class="mt-20 pb-10 text-slate-400 text-[10px] font-bold tracking-widest uppercase">
-    &copy; 2026 Arqamiyya Arts Fest • Live Updates Enabled
-    <p><a href="https://www.instagram.com/al_ashbals/">INSTAGRAM</a></p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div id="cat-subJunior"></div>
+        <div id="cat-junior"></div>
+        <div id="cat-senior"></div>
+    </div>
+</main>
+
+<footer class="mt-32 py-12 border-t border-slate-200 text-center">
+    <p class="text-slate-400 text-[10px] font-black tracking-[0.2em] uppercase mb-4">Official Results Portal • © 2026</p>
+    <div class="flex justify-center gap-6">
+        <a href="https://www.instagram.com/al_ashbals/" class="text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors">INSTAGRAM</a>
+        <a href="#" class="text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors">WEBSITE</a>
+    </div>
 </footer>
 
 <script>
-    const socket = io(); 
-    let festData = { 
-        overall: [
-            { name: "Team Emerald", points: 0 },
-            { name: "Team Ruby", points: 0 },
-            { name: "Team Sapphire", points: 0 }
-        ], 
-        categories: { subJunior: [], junior: [], senior: [] } 
-    };
+    const socket = io(); 
+    let festData = { 
+        overall: [
+            { name: "Team Emerald", points: 0 },
+            { name: "Team Ruby", points: 0 },
+            { name: "Team Sapphire", points: 0 }
+        ], 
+        categories: { subJunior: [], junior: [], senior: [] } 
+    };
 
-    // Socket listeners
-    socket.on('initData', (data) => { festData = data; render(); });
-    socket.on('dataChanged', (data) => { festData = data; render(); });
+    socket.on('initData', (data) => { festData = data; render(); });
+    socket.on('dataChanged', (data) => { festData = data; render(); });
 
-    function render() {
-        const searchTerm = document.getElementById('search-input').value.toLowerCase();
-        const overallSection = document.getElementById('overall-section');
-        
-        // Hide overall stats when searching to focus on individual results
-        overallSection.style.display = searchTerm ? 'none' : 'block';
+    function getTeamClass(name) {
+        if(name.toLowerCase().includes('emerald')) return 'border-emerald';
+        if(name.toLowerCase().includes('ruby')) return 'border-ruby';
+        if(name.toLowerCase().includes('sapphire')) return 'border-sapphire';
+        return 'border-slate-200';
+    }
 
-        // 1. Render Team Totals (Enlarged)
-        if (!searchTerm && festData.overall) {
-            const sortedOverall = [...festData.overall].sort((a,b) => b.points - a.points);
-            document.getElementById('overall-body').innerHTML = sortedOverall.map((t,i) => `
-                <div class="glass rounded-[2.5rem] p-8 md:p-10 flex justify-between items-center bg-white border-l-[12px] ${i===0?'border-yellow-400':'border-slate-200'} shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center gap-6 md:gap-10">
-                        <span class="text-4xl md:text-6xl font-black text-slate-200 italic">0${i+1}</span>
-                        <h2 class="text-3xl md:text-6xl font-black uppercase tracking-tighter">${t.name}</h2>
-                    </div>
-                    <div class="text-5xl md:text-8xl font-black text-indigo-600">${t.points}</div>
-                </div>
-            `).join('');
-        }
+    function render() {
+        const searchTerm = document.getElementById('search-input').value.toLowerCase();
+        const overallSection = document.getElementById('overall-section');
+        
+        overallSection.style.display = searchTerm ? 'none' : 'block';
 
-        // 2. Render Categories
-        const cats = [
-            { id: 'subJunior', label: 'SUB-JUNIOR' },
-            { id: 'junior', label: 'JUNIOR' },
-            { id: 'senior', label: 'SENIOR' }
-        ];
+        // 1. Render Team Totals
+        if (!searchTerm && festData.overall) {
+            const sortedOverall = [...festData.overall].sort((a,b) => b.points - a.points);
+            document.getElementById('overall-body').innerHTML = sortedOverall.map((t,i) => `
+                <div class="team-card glass rounded-[2rem] p-6 md:p-8 flex justify-between items-center shadow-lg hover:shadow-indigo-500/10 ${getTeamClass(t.name)}">
+                    <div class="flex items-center gap-6">
+                        <span class="text-3xl md:text-5xl font-black text-slate-200 italic leading-none">${i+1}</span>
+                        <div>
+                            <h2 class="text-2xl md:text-5xl font-black uppercase tracking-tighter">${t.name}</h2>
+                        </div>
+                    </div>
+                    <div class="text-5xl md:text-7xl font-[900] text-indigo-600 tabular-nums">${t.points}</div>
+                </div>
+            `).join('');
+        }
 
-        cats.forEach(cat => {
-            if (!festData.categories || !festData.categories[cat.id]) return;
+        // 2. Render Categories
+        const cats = [
+            { id: 'subJunior', label: 'Sub-Junior' },
+            { id: 'junior', label: 'Junior' },
+            { id: 'senior', label: 'Senior' }
+        ];
 
-            const allData = [...festData.categories[cat.id]].sort((a,b) => b.pts - a.pts);
-            const filteredData = allData.filter(p => 
-                (p.name && p.name.toLowerCase().includes(searchTerm)) || 
-                (p.team && p.team.toLowerCase().includes(searchTerm))
-            );
-            
-            const top5 = searchTerm ? [] : allData.slice(0, 5);
-            const others = searchTerm ? filteredData : allData.slice(5);
+        cats.forEach(cat => {
+            if (!festData.categories || !festData.categories[cat.id]) return;
 
-            let html = `
-                <div class="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-slate-100 h-full">
-                    <div class="bg-slate-900 text-white py-4 text-center font-black tracking-widest text-xs">${cat.label}</div>
-            `;
+            const allData = [...festData.categories[cat.id]].sort((a,b) => b.pts - a.pts);
+            const filteredData = allData.filter(p => 
+                (p.name && p.name.toLowerCase().includes(searchTerm)) || 
+                (p.team && p.team.toLowerCase().includes(searchTerm))
+            );
+            
+            const top5 = searchTerm ? [] : allData.slice(0, 5);
+            const others = searchTerm ? filteredData : allData.slice(5);
 
-            if (top5.length > 0) {
-                html += `<div class="p-5 bg-indigo-50/50 border-b border-indigo-100">
-                    <p class="text-[10px] font-black text-indigo-400 uppercase mb-4 tracking-tighter text-center">🏆 Category Leaders</p>
-                    <div class="space-y-3">
-                        ${top5.map((p, i) => `
-                            <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-indigo-100/50">
-                                <div class="flex items-center gap-3">
-                                    <span class="top-badge ${i<3 ? 'rank-'+(i+1) : 'bg-slate-100 text-slate-500'}">${i+1}</span>
-                                    <div>
-                                        <p class="text-[12px] font-black uppercase leading-tight">${p.name}</p>
-                                        <p class="text-[9px] font-bold text-indigo-500 uppercase mt-1">${p.team}</p>
-                                    </div>
-                                </div>
-                                <div class="text-lg font-black text-indigo-600">${p.pts}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>`;
-            }
+            let html = `
+                <div class="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100 flex flex-col h-full">
+                    <div class="bg-slate-900 text-white py-5 text-center font-black tracking-[0.2em] text-[10px] uppercase">${cat.label}</div>
+            `;
 
-            html += `<div class="p-5 space-y-3 max-h-[500px] overflow-y-auto">
-                ${others.length > 0 ? others.map(p => `
-                    <div class="flex justify-between items-center px-2 py-2 border-b border-slate-50 last:border-0">
-                        <div>
-                            <p class="text-[11px] font-bold uppercase text-slate-700">${p.name}</p>
-                            <p class="text-[9px] text-slate-400 uppercase font-medium">${p.team}</p>
-                        </div>
-                        <div class="text-sm font-black text-slate-300">${p.pts}</div>
-                    </div>
-                `).join('') : (searchTerm ? '<p class="text-center text-[10px] text-slate-400 py-4 italic">No results match your search</p>' : '')}
-            </div></div>`;
+            if (top5.length > 0) {
+                html += `<div class="p-6 bg-slate-50/50">
+                    <div class="space-y-4">
+                        ${top5.map((p, i) => `
+                            <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100 transition-transform hover:scale-[1.02]">
+                                <div class="flex items-center gap-4">
+                                    <span class="top-badge h-7 w-7 flex items-center justify-center text-[11px] ${i<3 ? 'rank-'+(i+1) : 'bg-slate-100 text-slate-500'} font-black rounded-lg">${i+1}</span>
+                                    <div>
+                                        <p class="text-[13px] font-black uppercase tracking-tight text-slate-800">${p.name}</p>
+                                        <p class="text-[10px] font-bold text-indigo-500 uppercase">${p.team}</p>
+                                    </div>
+                                </div>
+                                <div class="text-lg font-black text-slate-900">${p.pts}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
 
-            const container = document.getElementById('cat-' + cat.id);
-            if (searchTerm && filteredData.length === 0) {
-                container.classList.add('hidden');
-            } else {
-                container.classList.remove('hidden');
-                container.innerHTML = html;
-            }
-        });
-    }
+            html += `<div class="p-6 space-y-4 overflow-y-auto flex-grow max-h-[400px]">
+                ${others.length > 0 ? others.map(p => `
+                    <div class="flex justify-between items-center pb-3 border-b border-slate-50 last:border-0 last:pb-0">
+                        <div>
+                            <p class="text-[12px] font-bold uppercase text-slate-600">${p.name}</p>
+                            <p class="text-[9px] text-slate-400 uppercase font-medium tracking-wider">${p.team}</p>
+                        </div>
+                        <div class="text-sm font-black text-slate-400">${p.pts}</div>
+                    </div>
+                `).join('') : (searchTerm ? '<div class="py-10 text-center"><p class="text-xs font-bold text-slate-300 italic uppercase tracking-widest">No matching talent found</p></div>' : '')}
+            </div></div>`;
 
-    // Live indicator animation
-    gsap.to("#live-indicator", { opacity: 0.2, repeat: -1, yoyo: true, duration: 0.8 });
-    
-    // Initial call for placeholder display
-    render();
+            const container = document.getElementById('cat-' + cat.id);
+            if (searchTerm && filteredData.length === 0) {
+                container.classList.add('hidden');
+            } else {
+                container.classList.remove('hidden');
+                container.innerHTML = html;
+            }
+        });
+    }
+
+    gsap.to("#live-indicator", { opacity: 0.3, repeat: -1, yoyo: true, duration: 0.6, ease: "power2.inOut" });
+    render();
 </script>
 </body>
 </html>
-
