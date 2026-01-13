@@ -52,7 +52,6 @@
 <nav class="sticky top-0 z-50 glass border-b border-slate-200/50 py-4 px-6 mb-8">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
         <div class="flex items-center gap-4">
-            <img src="art.png" class="h-10 w-auto" alt="Logo" onerror="this.src='https://via.placeholder.com/40x40?text=A'">
             <span class="font-black tracking-tighter text-xl uppercase italic">Arqamiyya <span class="text-indigo-600">Arts</span></span>
         </div>
         <div class="flex items-center gap-2 bg-red-50 px-3 py-1 rounded-full border border-red-100">
@@ -83,8 +82,7 @@
             <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Championship Standings</h2>
             <div class="h-[1px] flex-grow bg-slate-200"></div>
         </div>
-        <div id="overall-body" class="grid grid-cols-1 gap-6">
-            </div>
+        <div id="overall-body" class="grid grid-cols-1 gap-6"></div>
     </section>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -129,7 +127,6 @@
         
         overallSection.style.display = searchTerm ? 'none' : 'block';
 
-        // 1. Render Team Totals
         if (!searchTerm && festData.overall) {
             const sortedOverall = [...festData.overall].sort((a,b) => b.points - a.points);
             document.getElementById('overall-body').innerHTML = sortedOverall.map((t,i) => `
@@ -145,7 +142,6 @@
             `).join('');
         }
 
-        // 2. Render Categories
         const cats = [
             { id: 'subJunior', label: 'Sub-Junior' },
             { id: 'junior', label: 'Junior' },
@@ -211,7 +207,6 @@
     }
 
     gsap.to("#live-indicator", { opacity: 0.3, repeat: -1, yoyo: true, duration: 0.6, ease: "power2.inOut" });
-    render();
 </script>
 </body>
 </html>
