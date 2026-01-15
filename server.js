@@ -12,9 +12,11 @@ const io = new Server(server, {
 });
 
 // --- 1. CONFIG & MIDDLEWARE ---
+// Enables Gzip compression for faster page loads
 app.use(compression()); 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Retrieve MongoDB URI from Environment Variables (set this in Render/Heroku)
 const mongoURI = process.env.MONGODB_URI;
 
 // Optimized MongoDB Connection
@@ -32,7 +34,7 @@ const FestSchema = new mongoose.Schema({
 });
 const DataModel = mongoose.model('FestData', FestSchema);
 
-// UPDATED TO TWO TEAMS: ASKARIYYA AND KUTHAIBA
+// DEFAULT DATA: Initialized with your two specific teams
 let festData = {
     overall: [
         { name: "ASKARIYYA", points: 0 },
@@ -42,6 +44,7 @@ let festData = {
 };
 
 // --- 3. DATA PERSISTENCE LOGIC ---
+// Restores data from the cloud on server startup
 async function restoreFromCloud() {
     try {
         const saved = await DataModel.findOne({ id: "master_data" });
@@ -49,7 +52,7 @@ async function restoreFromCloud() {
             festData = saved.content;
             console.log("📂 [SYSTEM] Cache primed from MongoDB Atlas");
         } else {
-            console.log("🆕 [SYSTEM] No existing data found. Starting fresh.");
+            console.log("🆕 [SYSTEM] No existing data found. Using code defaults.");
         }
     } catch (err) {
         console.error("⚠️ [SYSTEM] Critical Error during restoration:", err.message);
@@ -62,17 +65,21 @@ io.on('connection', (socket) => {
     const clientId = socket.id.substring(0, 5);
     console.log(`🔌 [SOCKET] New Client Connected: ${clientId}`);
 
+    // Send current data to the newly connected client
     socket.emit('initData', festData);
 
+    // Handle updates from the Admin Panel
     socket.on('updateData', async (newData) => {
         if (!newData || !newData.categories) {
             console.log(`🚫 [SOCKET] Blocked invalid data update from ${clientId}`);
             return;
         }
 
+        // Update local memory
         festData = newData; 
 
         try {
+            // Overwrite the single document in MongoDB
             await DataModel.findOneAndUpdate(
                 { id: "master_data" }, 
                 { 
@@ -82,6 +89,7 @@ io.on('connection', (socket) => {
                 { upsert: true, new: true }
             );
 
+            // Broadcast the new data to ALL connected users (Leaderboard + Admins)
             io.emit('dataChanged', festData);
             console.log(`📡 [BROADCAST] Results updated by Admin (${clientId})`);
             
@@ -96,7 +104,7 @@ io.on('connection', (socket) => {
     });
 });
 
-// --- 5. LIFELINE & EXCEPTION HANDLING ---
+// --- 5. HEALTH CHECK & PORT ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 
 const PORT = process.env.PORT || 3000;
@@ -107,6 +115,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('-------------------------------------------');
 });
 
+// Global error handling for unhandled promises
 process.on('unhandledRejection', (reason, promise) => {
     console.error('⚠️ Unhandled Rejection at:', promise, 'reason:', reason);
 });
