@@ -139,7 +139,7 @@
         let totals = { "ASKARIYYA": 0, "KUTHAIBA": 0 };
         Object.keys(festData.categories).forEach(cat => {
             festData.categories[cat].forEach(p => {
-                const team = p.team.toUpperCase().trim();
+                const team = p.team ? p.team.toUpperCase().trim() : "";
                 if (totals.hasOwnProperty(team)) totals[team] += (parseInt(p.pts) || 0);
             });
         });
@@ -181,7 +181,7 @@
         }
 
         const filtered = (festData.categories[catId] || []).map((p, originalIndex) => ({...p, originalIndex}))
-            .filter(p => p.name.toLowerCase().includes(search) || p.team.toLowerCase().includes(search));
+            .filter(p => p.name.toLowerCase().includes(search) || (p.team && p.team.toLowerCase().includes(search)));
 
         let html = `
             <div class="grid grid-cols-12 gap-4 mb-2 text-[9px] font-black text-slate-500 uppercase px-4 tracking-[0.2em]">
@@ -212,7 +212,9 @@
         lines.forEach(line => {
             if(line.includes(',')) {
                 const [name, team] = line.split(',');
-                festData.categories[catId].push({ name: name.trim(), team: team.trim().toUpperCase(), pts: 0 });
+                if(name && team) {
+                    festData.categories[catId].push({ name: name.trim(), team: team.trim().toUpperCase(), pts: 0 });
+                }
             }
         });
         document.getElementById('bulk-input').value = "";
