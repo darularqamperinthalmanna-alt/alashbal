@@ -19,6 +19,10 @@
 
         .team-card { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .team-card:hover { transform: scale(1.02); }
+
+        .top-performer-card { border-bottom: 4px solid #e2e8f0; transition: all 0.3s ease; }
+        .tp-ASKARIYYA { border-bottom-color: #10b981; }
+        .tp-KUTHAIBA { border-bottom-color: #ef4444; }
     </style>
 </head>
 
@@ -52,12 +56,20 @@
                class="w-full max-w-2xl px-8 py-5 rounded-3xl border-0 ring-1 ring-slate-200 focus:ring-4 focus:ring-indigo-500/20 shadow-xl outline-none text-lg">
     </div>
 
-    <section id="overall-section" class="mb-20">
+    <section id="overall-section" class="mb-12">
         <div class="flex items-center gap-4 mb-8">
             <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Two-Team Standings</h2>
             <div class="h-[1px] flex-grow bg-slate-200"></div>
         </div>
-        <div id="overall-body" class="grid grid-cols-1 gap-8">
+        <div id="overall-body" class="grid grid-cols-1 gap-8"></div>
+    </section>
+
+    <section id="top5-section" class="mb-20">
+        <div class="flex items-center gap-4 mb-8">
+            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">Top 5 Individual Performers</h2>
+            <div class="h-[1px] flex-grow bg-slate-200"></div>
+        </div>
+        <div id="top5-body" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             </div>
     </section>
 
@@ -81,11 +93,13 @@
     function render() {
         const searchTerm = document.getElementById('search-input').value.toLowerCase();
         const overallSection = document.getElementById('overall-section');
+        const top5Section = document.getElementById('top5-section');
         
-        // Hide standings when searching
+        // Hide summary sections when searching
         overallSection.style.display = searchTerm ? 'none' : 'block';
+        top5Section.style.display = searchTerm ? 'none' : 'block';
 
-        // Render Top Standings
+        // 1. Render Team Standings
         if (!searchTerm && festData.overall) {
             const sorted = [...festData.overall].sort((a,b) => b.points - a.points);
             document.getElementById('overall-body').innerHTML = sorted.map((t, i) => `
@@ -99,7 +113,33 @@
             `).join('');
         }
 
-        // Render Categories
+        // 2. Render Top 5 Individuals
+        if (!searchTerm) {
+            // Flatten all categories into one array
+            let allParticipants = [
+                ...festData.categories.subJunior,
+                ...festData.categories.junior,
+                ...festData.categories.senior
+            ];
+
+            // Sort and take top 5
+            const top5 = allParticipants
+                .sort((a, b) => (parseInt(b.pts) || 0) - (parseInt(a.pts) || 0))
+                .slice(0, 5);
+
+            document.getElementById('top5-body').innerHTML = top5.map((p, i) => `
+                <div class="bg-white p-5 rounded-2xl shadow-lg top-performer-card tp-${p.team.toUpperCase()}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-black bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase">Rank #${i+1}</span>
+                        <span class="text-lg font-black text-indigo-600">${p.pts}</span>
+                    </div>
+                    <h3 class="font-black text-sm uppercase truncate mb-1">${p.name}</h3>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${p.team}</p>
+                </div>
+            `).join('');
+        }
+
+        // 3. Render Categories
         const cats = [
             { id: 'subJunior', label: 'Sub-Junior' },
             { id: 'junior', label: 'Junior' },
