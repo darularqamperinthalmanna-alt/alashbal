@@ -13,17 +13,17 @@
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .live-dot { width: 10px; height: 10px; background: #ff0000; border-radius: 50%; display: inline-block; box-shadow: 0 0 12px #ff0000; }
         
-        /* Fixed Team Borders */
-        .border-ASKARIYYA { border-left: 15px solid #10b981 !important; } /* Emerald Green */
-        .border-KUTHAIBA { border-left: 15px solid #ef4444 !important; }  /* Ruby Red */
+        .border-ASKARIYYA { border-left: 15px solid #10b981 !important; } 
+        .border-KUTHAIBA { border-left: 15px solid #ef4444 !important; }
 
-        .team-card { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .team-card:hover { transform: scale(1.02); }
+        .team-card, .top-performer-card, .cat-card { opacity: 0; transform: translateY(20px); }
 
-        /* Top Performer Highlights */
-        .top-performer-card { border-bottom: 4px solid #e2e8f0; transition: all 0.3s ease; }
+        .top-performer-card { border-bottom: 4px solid #e2e8f0; }
         .tp-border-ASKARIYYA { border-bottom-color: #10b981; }
         .tp-border-KUTHAIBA { border-bottom-color: #ef4444; }
+
+        /* Smooth number transitions */
+        .pts-number { display: inline-block; }
     </style>
 </head>
 
@@ -39,9 +39,14 @@
                 <span class="font-[900] tracking-tighter text-3xl md:text-5xl uppercase italic leading-[0.8]">Arqamiyya<br><span class="text-indigo-600">Arts</span></span>
             </div>
         </div>
-        <div class="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-slate-200 shadow-sm">
-            <span class="live-dot" id="live-indicator"></span>
-            <span class="text-xs font-black text-slate-900 uppercase tracking-widest">Live Results</span>
+        <div class="flex items-center gap-4">
+            <a href="https://instagram.com/@al_ashbals" target="_blank" class="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-transform">
+                Instagram
+            </a>
+            <div class="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-slate-200 shadow-sm">
+                <span class="live-dot" id="live-indicator"></span>
+                <span class="text-xs font-black text-slate-900 uppercase tracking-widest">Live</span>
+            </div>
         </div>
     </div>
 </nav>
@@ -53,13 +58,13 @@
     </header>
 
     <div class="flex justify-center mb-16">
-        <input type="text" id="search-input" oninput="render()" placeholder="Search by participant or team name..." 
-               class="w-full max-w-2xl px-8 py-5 rounded-3xl border-0 ring-1 ring-slate-200 focus:ring-4 focus:ring-indigo-500/20 shadow-xl outline-none text-lg">
+        <input type="text" id="search-input" oninput="render()" placeholder="Search participant..." 
+               class="w-full max-w-2xl px-8 py-5 rounded-3xl border-0 ring-1 ring-slate-200 focus:ring-4 focus:ring-indigo-500/20 shadow-xl outline-none text-lg transition-all">
     </div>
 
     <section id="overall-section" class="mb-12">
         <div class="flex items-center gap-4 mb-8">
-            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Two-Team Standings</h2>
+            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Team Standings</h2>
             <div class="h-[1px] flex-grow bg-slate-200"></div>
         </div>
         <div id="overall-body" class="grid grid-cols-1 gap-8"></div>
@@ -67,11 +72,10 @@
 
     <section id="top-performers-section" class="mb-20">
         <div class="flex items-center gap-4 mb-8">
-            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">Top 5 Individual Performers</h2>
+            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">Individual Top 5</h2>
             <div class="h-[1px] flex-grow bg-slate-200"></div>
         </div>
-        <div id="top-performers-body" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            </div>
+        <div id="top-performers-body" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"></div>
     </section>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -83,55 +87,40 @@
 
 <script>
     const socket = io();
-    let festData = { 
-        overall: [], 
-        categories: { subJunior: [], junior: [], senior: [] } 
-    };
+    let festData = { overall: [], categories: { subJunior: [], junior: [], senior: [] } };
+    let firstLoad = true;
 
     socket.on('initData', (data) => { festData = data; render(); });
     socket.on('dataChanged', (data) => { festData = data; render(); });
 
     function render() {
         const searchTerm = document.getElementById('search-input').value.toLowerCase();
-        const overallSection = document.getElementById('overall-section');
-        const topSection = document.getElementById('top-performers-section');
         
-        // Hide summary sections when searching
-        overallSection.style.display = searchTerm ? 'none' : 'block';
-        topSection.style.display = searchTerm ? 'none' : 'block';
+        document.getElementById('overall-section').style.display = searchTerm ? 'none' : 'block';
+        document.getElementById('top-performers-section').style.display = searchTerm ? 'none' : 'block';
 
-        // 1. Render Team Standings
+        // 1. Teams
         if (!searchTerm && festData.overall) {
             const sorted = [...festData.overall].sort((a,b) => b.points - a.points);
             document.getElementById('overall-body').innerHTML = sorted.map((t, i) => `
-                <div class="team-card glass rounded-[2.5rem] p-8 flex justify-between items-center shadow-2xl border-ASKARIYYA border-${t.name.toUpperCase()}">
+                <div class="team-card glass rounded-[2.5rem] p-8 flex justify-between items-center shadow-2xl border-${t.name.toUpperCase()}">
                     <div class="flex items-center gap-8">
                         <span class="text-5xl font-black text-slate-200 italic">${i+1}</span>
                         <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter">${t.name}</h2>
                     </div>
-                    <div class="text-6xl md:text-8xl font-[900] text-indigo-600 tabular-nums">${t.points}</div>
+                    <div class="text-6xl md:text-8xl font-[900] text-indigo-600 tabular-nums pts-val" data-target="${t.points}">0</div>
                 </div>
             `).join('');
         }
 
-        // 2. NEW: Calculate and Render Top 5 Performers
-        if (!searchTerm && festData.categories) {
-            // Combine all participants from all categories into one list
-            const allParticipants = [
-                ...festData.categories.subJunior,
-                ...festData.categories.junior,
-                ...festData.categories.senior
-            ];
-
-            // Sort by points descending and take top 5
-            const top5 = allParticipants
-                .sort((a, b) => b.pts - a.pts)
-                .slice(0, 5);
-
+        // 2. Top 5
+        if (!searchTerm) {
+            const all = [...festData.categories.subJunior, ...festData.categories.junior, ...festData.categories.senior];
+            const top5 = all.sort((a, b) => (b.pts||0) - (a.pts||0)).slice(0, 5);
             document.getElementById('top-performers-body').innerHTML = top5.map((p, i) => `
                 <div class="bg-white p-5 rounded-2xl shadow-lg top-performer-card tp-border-${p.team.toUpperCase()}">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-black bg-slate-100 px-2 py-1 rounded text-slate-400 uppercase">Rank #${i+1}</span>
+                        <span class="text-[10px] font-black bg-slate-100 px-2 py-1 rounded text-slate-400 uppercase">#${i+1}</span>
                         <span class="text-lg font-black text-indigo-600">${p.pts}</span>
                     </div>
                     <h3 class="font-black text-sm uppercase truncate mb-1">${p.name}</h3>
@@ -140,29 +129,18 @@
             `).join('');
         }
 
-        // 3. Render Categories
-        const cats = [
-            { id: 'subJunior', label: 'Sub-Junior' },
-            { id: 'junior', label: 'Junior' },
-            { id: 'senior', label: 'Senior' }
-        ];
-
-        cats.forEach(cat => {
-            const container = document.getElementById('cat-' + cat.id);
-            if (!festData.categories || !festData.categories[cat.id]) return;
-
-            const items = [...festData.categories[cat.id]].sort((a,b) => b.pts - a.pts)
+        // 3. Categories
+        ['subJunior', 'junior', 'senior'].forEach(id => {
+            const container = document.getElementById('cat-' + id);
+            const items = [...(festData.categories[id]||[])].sort((a,b) => (b.pts||0)-(a.pts||0))
                 .filter(p => p.name.toLowerCase().includes(searchTerm) || p.team.toLowerCase().includes(searchTerm));
             
-            if (searchTerm && items.length === 0) {
-                container.classList.add('hidden');
-                return;
-            }
+            if (searchTerm && items.length === 0) { container.classList.add('hidden'); return; }
             container.classList.remove('hidden');
 
             container.innerHTML = `
-                <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-100 flex flex-col h-full">
-                    <div class="bg-slate-900 text-white py-5 text-center font-black tracking-[0.2em] text-[10px] uppercase">${cat.label}</div>
+                <div class="cat-card bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-100 h-full">
+                    <div class="bg-slate-900 text-white py-5 text-center font-black tracking-[0.2em] text-[10px] uppercase">${id}</div>
                     <div class="p-6 space-y-4">
                         ${items.map(p => `
                             <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -176,6 +154,30 @@
                     </div>
                 </div>
             `;
+        });
+
+        runAnimations();
+    }
+
+    function runAnimations() {
+        // Fade in cards
+        gsap.to(".team-card, .top-performer-card, .cat-card", {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power4.out"
+        });
+
+        // Animate numbers
+        document.querySelectorAll('.pts-val').forEach(el => {
+            const target = parseInt(el.getAttribute('data-target'));
+            gsap.to(el, {
+                innerText: target,
+                duration: 2,
+                snap: { innerText: 1 },
+                ease: "power2.out"
+            });
         });
     }
 
