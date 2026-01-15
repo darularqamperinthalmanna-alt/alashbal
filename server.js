@@ -11,23 +11,22 @@ const io = new Server(server, {
     cors: { origin: "*" } 
 });
 
-// --- 1. MIDDLEWARE ---
-app.use(compression()); // Makes the leaderboard load significantly faster
+// --- 1. CONFIG & MIDDLEWARE ---
+// Enables Gzip compression for faster page loads
+app.use(compression()); 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- 2. DATABASE CONNECTION ---
-// Set your MONGODB_URI in Render/Heroku environment variables
+// Retrieve MongoDB URI from Environment Variables (set this in Render/Heroku)
 const mongoURI = process.env.MONGODB_URI;
 
+// Optimized MongoDB Connection
 mongoose.connect(mongoURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000, 
 })
 .then(() => console.log("✅ [DATABASE] Cloud Connection Established"))
 .catch(err => console.error("❌ [DATABASE] Connection Error:", err.message));
 
-// --- 3. DATA SCHEMA & INITIALIZATION ---
+// --- 2. DATA SCHEMA ---
 const FestSchema = new mongoose.Schema({
     id: { type: String, default: "master_data", unique: true },
     content: Object,
@@ -35,7 +34,7 @@ const FestSchema = new mongoose.Schema({
 });
 const DataModel = mongoose.model('FestData', FestSchema);
 
-// Default data structure for Arqamiyya Arts
+// DEFAULT DATA: Initialized with your two specific teams
 let festData = {
     overall: [
         { name: "ASKARIYYA", points: 0 },
@@ -44,42 +43,43 @@ let festData = {
     categories: { subJunior: [], junior: [], senior: [] }
 };
 
-// Restore data from MongoDB on startup
+// --- 3. DATA PERSISTENCE LOGIC ---
+// Restores data from the cloud on server startup
 async function restoreFromCloud() {
     try {
         const saved = await DataModel.findOne({ id: "master_data" });
         if (saved && saved.content) {
             festData = saved.content;
-            console.log("📂 [SYSTEM] Local cache updated from Cloud storage");
+            console.log("📂 [SYSTEM] Cache primed from MongoDB Atlas");
         } else {
-            console.log("🆕 [SYSTEM] No cloud data found. Initializing with defaults.");
+            console.log("🆕 [SYSTEM] No existing data found. Using code defaults.");
         }
     } catch (err) {
-        console.error("⚠️ [SYSTEM] Restore Error:", err.message);
+        console.error("⚠️ [SYSTEM] Critical Error during restoration:", err.message);
     }
 }
 restoreFromCloud();
 
-// --- 4. REAL-TIME SOCKET ENGINE ---
+// --- 4. REAL-TIME ENGINE ---
 io.on('connection', (socket) => {
     const clientId = socket.id.substring(0, 5);
-    console.log(`🔌 [SOCKET] New Connection: ${clientId}`);
+    console.log(`🔌 [SOCKET] New Client Connected: ${clientId}`);
 
-    // Send the latest data immediately upon connection
+    // Send current data to the newly connected client
     socket.emit('initData', festData);
 
-    // Listen for updates from the Admin Panel
+    // Handle updates from the Admin Panel
     socket.on('updateData', async (newData) => {
         if (!newData || !newData.categories) {
-            console.log(`🚫 [SOCKET] Invalid update attempt by ${clientId}`);
+            console.log(`🚫 [SOCKET] Blocked invalid data update from ${clientId}`);
             return;
         }
 
-        // Update local memory for instant response
+        // Update local memory
         festData = newData; 
 
         try {
-            // Persist the changes to MongoDB Atlas
+            // Overwrite the single document in MongoDB
             await DataModel.findOneAndUpdate(
                 { id: "master_data" }, 
                 { 
@@ -89,13 +89,13 @@ io.on('connection', (socket) => {
                 { upsert: true, new: true }
             );
 
-            // Broadcast the updated data to ALL users (Leaderboard + Admins)
+            // Broadcast the new data to ALL connected users (Leaderboard + Admins)
             io.emit('dataChanged', festData);
-            console.log(`📡 [BROADCAST] Data synced across all clients by ${clientId}`);
+            console.log(`📡 [BROADCAST] Results updated by Admin (${clientId})`);
             
         } catch (err) {
-            console.error(`❌ [CLOUD] Save Failure:`, err.message);
-            socket.emit('saveError', 'Cloud database update failed.');
+            console.error(`❌ [CLOUD] Save Failure from client ${clientId}:`, err.message);
+            socket.emit('saveError', 'Database update failed. Please try again.');
         }
     });
 
@@ -104,15 +104,18 @@ io.on('connection', (socket) => {
     });
 });
 
-// --- 5. SERVER LAUNCH ---
+// --- 5. HEALTH CHECK & PORT ---
+app.get('/health', (req, res) => res.status(200).send('OK'));
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log('-------------------------------------------');
     console.log(`🚀 FEST SERVER LIVE: http://localhost:${PORT}`);
+    console.log(`📅 START TIME: ${new Date().toLocaleString()}`);
     console.log('-------------------------------------------');
 });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-    console.log('🚨 Unhandled Rejection:', err.message);
+// Global error handling for unhandled promises
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️ Unhandled Rejection at:', promise, 'reason:', reason);
 });
