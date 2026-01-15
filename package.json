@@ -1,15 +1,17 @@
 {
-  "name": "alashbal",
+  "name": "alashbal-fest",
   "version": "1.0.0",
+  "description": "Arts Festival Leaderboard",
   "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "express": "^4.18.2",
+    "http": "0.0.1-security",
     "socket.io": "^4.7.2",
     "mongoose": "^7.5.0",
     "compression": "^1.7.4",
     "path": "^0.12.7"
-  },
-  "scripts": {
-    "start": "node server.js"
   }
 }
