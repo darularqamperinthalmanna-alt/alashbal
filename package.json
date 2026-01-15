@@ -1,17 +1,20 @@
 {
-  "name": "alashbal-fest",
+  "name": "arqamiyya-arts-fest",
   "version": "1.0.0",
-  "description": "Arts Festival Leaderboard",
+  "description": "Live Leaderboard for Arqamiyya Arts Fest",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "http": "0.0.1-security",
-    "socket.io": "^4.7.2",
-    "mongoose": "^7.5.0",
     "compression": "^1.7.4",
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0",
+    "socket.io": "^4.6.1",
     "path": "^0.12.7"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
