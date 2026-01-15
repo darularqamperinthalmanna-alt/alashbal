@@ -10,19 +10,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         body { background: #f8fafc; color: #0f172a; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .glass { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
         .live-dot { width: 10px; height: 10px; background: #ff0000; border-radius: 50%; display: inline-block; box-shadow: 0 0 12px #ff0000; }
         
-        /* Fixed Team Borders */
-        .border-ASKARIYYA { border-left: 15px solid #10b981 !important; } /* Emerald Green */
-        .border-KUTHAIBA { border-left: 15px solid #ef4444 !important; }  /* Ruby Red */
+        /* Team Theming */
+        .border-ASKARIYYA { border-left: 15px solid #10b981 !important; }
+        .border-KUTHAIBA { border-left: 15px solid #ef4444 !important; }
+        .tp-ASKARIYYA { border-bottom: 4px solid #10b981; }
+        .tp-KUTHAIBA { border-bottom: 4px solid #ef4444; }
 
         .team-card { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .team-card:hover { transform: scale(1.02); }
-
-        .top-performer-card { border-bottom: 4px solid #e2e8f0; transition: all 0.3s ease; }
-        .tp-ASKARIYYA { border-bottom-color: #10b981; }
-        .tp-KUTHAIBA { border-bottom-color: #ef4444; }
+        .team-card:hover { transform: scale(1.01); }
     </style>
 </head>
 
@@ -48,29 +46,28 @@
 <main class="max-w-7xl mx-auto px-4">
     <header class="text-center mb-12">
         <h1 class="text-5xl md:text-7xl font-[900] uppercase tracking-tighter mb-2 italic">Leader<span class="text-indigo-600">board</span></h1>
-        <p class="text-slate-400 font-bold tracking-[0.3em] text-xs uppercase">Sakshyam 2025-26</p>
+        <p class="text-slate-400 font-bold tracking-[0.3em] text-[10px] uppercase">Sakshyam 2025-26</p>
     </header>
 
     <div class="flex justify-center mb-16">
-        <input type="text" id="search-input" oninput="render()" placeholder="Search by participant or team name..." 
+        <input type="text" id="search-input" oninput="render()" placeholder="Search participants or teams..." 
                class="w-full max-w-2xl px-8 py-5 rounded-3xl border-0 ring-1 ring-slate-200 focus:ring-4 focus:ring-indigo-500/20 shadow-xl outline-none text-lg">
     </div>
 
-    <section id="overall-section" class="mb-12">
+    <section id="overall-section" class="mb-16">
         <div class="flex items-center gap-4 mb-8">
-            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Two-Team Standings</h2>
+            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Team Standings</h2>
             <div class="h-[1px] flex-grow bg-slate-200"></div>
         </div>
-        <div id="overall-body" class="grid grid-cols-1 gap-8"></div>
+        <div id="overall-body" class="grid grid-cols-1 gap-6"></div>
     </section>
 
     <section id="top5-section" class="mb-20">
         <div class="flex items-center gap-4 mb-8">
-            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">Top 5 Individual Performers</h2>
+            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">Individual Top 5 (Overall)</h2>
             <div class="h-[1px] flex-grow bg-slate-200"></div>
         </div>
-        <div id="top5-body" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            </div>
+        <div id="top5-body" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
     </section>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -95,51 +92,45 @@
         const overallSection = document.getElementById('overall-section');
         const top5Section = document.getElementById('top5-section');
         
-        // Hide summary sections when searching
         overallSection.style.display = searchTerm ? 'none' : 'block';
         top5Section.style.display = searchTerm ? 'none' : 'block';
 
-        // 1. Render Team Standings
+        // --- Render Teams ---
         if (!searchTerm && festData.overall) {
-            const sorted = [...festData.overall].sort((a,b) => b.points - a.points);
-            document.getElementById('overall-body').innerHTML = sorted.map((t, i) => `
-                <div class="team-card glass rounded-[2.5rem] p-8 flex justify-between items-center shadow-2xl border-ASKARIYYA border-${t.name.toUpperCase()}">
-                    <div class="flex items-center gap-8">
-                        <span class="text-5xl font-black text-slate-200 italic">${i+1}</span>
-                        <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter">${t.name}</h2>
+            const sortedTeams = [...festData.overall].sort((a,b) => b.points - a.points);
+            document.getElementById('overall-body').innerHTML = sortedTeams.map((t, i) => `
+                <div class="team-card glass rounded-[2.5rem] p-8 flex justify-between items-center shadow-2xl border-${t.name.toUpperCase()}">
+                    <div class="flex items-center gap-6">
+                        <span class="text-4xl font-black text-slate-200 italic">#${i+1}</span>
+                        <h2 class="text-4xl font-black uppercase tracking-tighter">${t.name}</h2>
                     </div>
-                    <div class="text-6xl md:text-8xl font-[900] text-indigo-600 tabular-nums">${t.points}</div>
+                    <div class="text-6xl font-[900] text-indigo-600 tabular-nums">${t.points}</div>
                 </div>
             `).join('');
         }
 
-        // 2. Render Top 5 Individuals
+        // --- Render Overall Individual Top 5 ---
         if (!searchTerm) {
-            // Flatten all categories into one array
-            let allParticipants = [
+            const allParticipants = [
                 ...festData.categories.subJunior,
                 ...festData.categories.junior,
                 ...festData.categories.senior
             ];
-
-            // Sort and take top 5
-            const top5 = allParticipants
-                .sort((a, b) => (parseInt(b.pts) || 0) - (parseInt(a.pts) || 0))
-                .slice(0, 5);
-
+            const top5 = allParticipants.sort((a, b) => (b.pts || 0) - (a.pts || 0)).slice(0, 5);
+            
             document.getElementById('top5-body').innerHTML = top5.map((p, i) => `
-                <div class="bg-white p-5 rounded-2xl shadow-lg top-performer-card tp-${p.team.toUpperCase()}">
+                <div class="bg-white p-5 rounded-2xl shadow-lg tp-${p.team.toUpperCase()}">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-black bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase">Rank #${i+1}</span>
+                        <span class="text-[9px] font-black bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase">${i === 0 ? '👑' : 'Rank'} #${i+1}</span>
                         <span class="text-lg font-black text-indigo-600">${p.pts}</span>
                     </div>
-                    <h3 class="font-black text-sm uppercase truncate mb-1">${p.name}</h3>
+                    <h3 class="font-black text-xs uppercase truncate mb-1">${p.name}</h3>
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${p.team}</p>
                 </div>
             `).join('');
         }
 
-        // 3. Render Categories
+        // --- Render Categories ---
         const cats = [
             { id: 'subJunior', label: 'Sub-Junior' },
             { id: 'junior', label: 'Junior' },
@@ -148,22 +139,35 @@
 
         cats.forEach(cat => {
             const container = document.getElementById('cat-' + cat.id);
-            if (!festData.categories || !festData.categories[cat.id]) return;
-
-            const items = [...festData.categories[cat.id]].sort((a,b) => b.pts - a.pts)
-                .filter(p => p.name.toLowerCase().includes(searchTerm) || p.team.toLowerCase().includes(searchTerm));
+            const allItems = [...(festData.categories[cat.id] || [])];
+            const filtered = allItems.filter(p => p.name.toLowerCase().includes(searchTerm) || p.team.toLowerCase().includes(searchTerm));
             
-            if (searchTerm && items.length === 0) {
+            if (searchTerm && filtered.length === 0) {
                 container.classList.add('hidden');
                 return;
             }
             container.classList.remove('hidden');
 
+            const sortedList = filtered.sort((a,b) => (b.pts||0) - (a.pts||0));
+            const catTop3 = allItems.sort((a,b) => (b.pts||0) - (a.pts||0)).slice(0, 3);
+
             container.innerHTML = `
                 <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-100 flex flex-col h-full">
-                    <div class="bg-slate-900 text-white py-5 text-center font-black tracking-[0.2em] text-[10px] uppercase">${cat.label}</div>
+                    <div class="bg-slate-900 text-white py-5 text-center font-black tracking-[0.2em] text-[10px] uppercase">${cat.label} Section</div>
+                    
+                    ${!searchTerm && catTop3.length > 0 ? `
+                    <div class="px-4 py-4 bg-slate-50 border-b border-slate-100 flex gap-2">
+                        ${catTop3.map((p, i) => `
+                            <div class="flex-1 bg-white p-2 rounded-xl border-b-2 ${p.team.toUpperCase() === 'ASKARIYYA' ? 'border-emerald-500' : 'border-red-500'} shadow-sm text-center">
+                                <p class="text-[8px] font-bold text-slate-400">#${i+1}</p>
+                                <p class="text-[10px] font-black truncate">${p.name.split(' ')[0]}</p>
+                                <p class="text-[10px] font-black text-indigo-600">${p.pts}</p>
+                            </div>
+                        `).join('')}
+                    </div>` : ''}
+
                     <div class="p-6 space-y-4">
-                        ${items.map(p => `
+                        ${sortedList.map(p => `
                             <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <div>
                                     <p class="text-sm font-black uppercase text-slate-800">${p.name}</p>
