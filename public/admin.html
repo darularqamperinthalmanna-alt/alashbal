@@ -6,90 +6,93 @@
     <title>SYSTEM CONTROL | ARQAMIYYA</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #020617; font-family: 'Inter', sans-serif; color: #f8fafc; }
-        .admin-card { background: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; backdrop-filter: blur(10px); }
+        body { background: #0f172a; font-family: 'Inter', sans-serif; color: #f8fafc; }
+        .admin-card { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(51, 65, 85, 1); backdrop-filter: blur(10px); }
         .input-field { 
-            background: #0f172a; border: 1px solid #334155; color: white;
-            border-radius: 12px; padding: 10px 15px; transition: all 0.2s;
+            background: #1e293b; border: 1px solid #334155; color: white;
+            border-radius: 8px; padding: 8px 12px; transition: all 0.2s;
         }
-        .input-field:focus { border-color: #6366f1; outline: none; background: #020617; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
-        #login-overlay { position: fixed; inset: 0; background: #020617; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .input-field:focus { border-color: #6366f1; ring: 2px ring-indigo-500/20; outline: none; background: #0f172a; }
+        #login-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 100; display: flex; align-items: center; justify-content: center; }
         .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen">
 
 <div id="login-overlay">
-    <div class="text-center p-10 admin-card rounded-[2.5rem] shadow-2xl max-w-md w-full border-indigo-500/20">
-        <div class="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-2xl shadow-indigo-600/40">
-            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+    <div class="text-center p-10 admin-card rounded-3xl shadow-2xl max-w-sm w-full border-indigo-500/30">
+        <div class="w-16 h-16 bg-indigo-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-indigo-500/40">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
         </div>
-        <h2 class="text-3xl font-black mb-2 tracking-tighter uppercase">Terminal Access</h2>
-        <p class="text-slate-500 text-[10px] mb-8 tracking-[0.3em] font-bold uppercase">Encrypted Session Required</p>
-        <input type="password" id="pass-input" placeholder="••••••••" class="input-field mb-6 p-5 text-2xl text-center w-full tracking-[0.5em]">
-        <button onclick="checkPass()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-indigo-600/20 active:scale-95">AUTHENTICATE</button>
+        <h2 class="text-2xl font-black mb-2 tracking-tight text-white uppercase">Terminal Access</h2>
+        <p class="text-slate-400 text-xs mb-6 uppercase tracking-widest font-bold">Encrypted Connection</p>
+        <input type="password" id="pass-input" placeholder="••••••••" class="input-field mb-4 p-4 text-lg text-center w-full tracking-widest">
+        <button onclick="checkPass()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20">AUTHENTICATE</button>
     </div>
 </div>
 
-<div id="main-content" class="p-4 md:p-10 max-w-7xl mx-auto hidden">
-    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-6">
+<div id="main-content" class="p-4 md:p-8 max-w-[1600px] mx-auto hidden">
+    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
         <div>
-            <div class="flex items-center gap-3 mb-1">
-                <span class="bg-indigo-600 text-[10px] font-black px-2 py-0.5 rounded">ADMIN V3.0</span>
-                <h1 class="text-4xl font-[900] tracking-tighter uppercase italic">Control <span class="text-indigo-500">Center</span></h1>
+            <div class="flex items-center gap-3">
+                <span class="bg-indigo-600 text-[10px] font-black px-2 py-0.5 rounded">V2.4</span>
+                <h1 class="text-3xl font-black tracking-tighter uppercase">Command <span class="text-indigo-500 italic">Center</span></h1>
             </div>
-            <p class="text-slate-500 text-[10px] font-bold tracking-[0.4em] uppercase">Live Sync System 2026</p>
+            <p class="text-slate-500 text-xs font-bold tracking-[0.3em] uppercase mt-1">Live Management System 2026</p>
         </div>
         
-        <div class="flex items-center gap-4">
-            <button onclick="saveData(event)" id="broadcast-btn" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-10 py-4 rounded-2xl font-black text-sm shadow-xl shadow-emerald-500/10 transition-all active:scale-95">
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-2 admin-card p-2 rounded-2xl">
+                <span class="text-[10px] font-black text-slate-400 uppercase ml-2">Sync Mode</span>
+                <button id="calc-toggle" onclick="toggleCalcMode()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black transition-all">AUTO-CALC ON</button>
+            </div>
+            <button onclick="saveData(event)" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-8 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-emerald-500/10 transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
                 BROADCAST CHANGES
             </button>
         </div>
     </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
         <div class="space-y-6">
-            <div class="admin-card p-6 rounded-[2rem]">
-                <h3 class="font-black mb-6 text-[10px] uppercase text-indigo-400 tracking-widest flex items-center gap-2">
-                    <span class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span> Live Totals
+            <div class="admin-card p-6 rounded-3xl">
+                <h3 class="font-black mb-6 text-xs uppercase text-indigo-400 tracking-widest flex items-center gap-2">
+                    <span class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span> Team Standing
                 </h3>
-                <div id="admin-totals-grid" class="space-y-4"></div>
+                <div id="admin-main-grid" class="space-y-6"></div>
             </div>
 
-            <div class="bg-slate-900/50 p-6 rounded-[2rem] border border-dashed border-slate-800">
-                <h3 class="font-black mb-4 uppercase text-[10px] text-slate-400 tracking-widest">Bulk Import</h3>
-                <textarea id="bulk-input" rows="4" class="w-full bg-slate-950 p-4 rounded-xl text-white text-xs mb-4 border border-slate-800 focus:border-indigo-500 outline-none mono" placeholder="Name, Team"></textarea>
-                <button onclick="importBulk()" class="w-full bg-slate-800 hover:bg-slate-700 p-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Add to Category</button>
+            <div class="bg-slate-800/50 p-6 rounded-3xl border border-dashed border-slate-700">
+                <h3 class="font-black mb-4 uppercase text-xs text-slate-300">Fast Bulk Input</h3>
+                <p class="text-[10px] text-slate-500 mb-3 leading-relaxed">Format: <code class="text-indigo-400 font-bold italic">Name, Team</code> (one per line)</p>
+                <textarea id="bulk-input" rows="5" class="w-full bg-slate-900 p-4 rounded-xl text-white text-xs mb-4 border border-slate-700 focus:border-indigo-500 outline-none" placeholder="Participant Name, ASKARIYYA&#10;Participant Name, KUTHAIBA"></textarea>
+                <button onclick="importBulk(currentCat)" class="w-full bg-slate-700 hover:bg-slate-600 p-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Add to List</button>
             </div>
         </div>
 
-        <div class="lg:col-span-3">
-            <div class="admin-card rounded-[2.5rem] overflow-hidden shadow-2xl">
-                <div class="p-6 border-b border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/30">
-                    <div class="flex p-1.5 bg-slate-950 rounded-2xl border border-slate-800">
-                        <button onclick="switchCat('subJunior')" id="btn-subJunior" class="cat-btn px-6 py-2.5 rounded-xl text-[10px] font-black transition-all">SUB-JUNIOR</button>
-                        <button onclick="switchCat('junior')" id="btn-junior" class="cat-btn px-6 py-2.5 rounded-xl text-[10px] font-black transition-all">JUNIOR</button>
-                        <button onclick="switchCat('senior')" id="btn-senior" class="cat-btn px-6 py-2.5 rounded-xl text-[10px] font-black transition-all">SENIOR</button>
+        <div class="xl:col-span-3">
+            <div class="admin-card rounded-3xl overflow-hidden shadow-2xl">
+                <div class="p-6 border-b border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-800/30">
+                    <div class="flex p-1 bg-slate-900 rounded-xl">
+                        <button onclick="renderAdminCat('subJunior')" id="btn-subJunior" class="cat-btn px-6 py-2 rounded-lg text-[10px] font-black transition-all">SUB-JUNIOR</button>
+                        <button onclick="renderAdminCat('junior')" id="btn-junior" class="cat-btn px-6 py-2 rounded-lg text-[10px] font-black transition-all">JUNIOR</button>
+                        <button onclick="renderAdminCat('senior')" id="btn-senior" class="cat-btn px-6 py-2 rounded-lg text-[10px] font-black transition-all">SENIOR</button>
                     </div>
                     
-                    <div class="relative w-full md:w-64">
-                        <input type="text" id="admin-search" oninput="render()" placeholder="Filter current list..." class="input-field w-full pl-10 text-xs">
-                        <span class="absolute left-4 top-3 text-slate-600 text-xs italic font-black">@</span>
+                    <div class="relative w-full md:w-80">
+                        <input type="text" id="admin-search" oninput="renderAdminCat(currentCat)" placeholder="Search Name or Team..." class="input-field w-full pl-10 text-xs py-3">
+                        <span class="absolute left-4 top-3 text-slate-500">🔍</span>
                     </div>
                 </div>
 
                 <div class="p-6">
-                    <div id="editor-header" class="grid grid-cols-12 gap-4 mb-4 px-4 text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                        <div class="col-span-1">ID</div>
-                        <div class="col-span-5">Participant Name</div>
-                        <div class="col-span-3">Team (A/K)</div>
-                        <div class="col-span-2 text-center">Points</div>
-                        <div class="col-span-1 text-right">DEL</div>
-                    </div>
-                    <div id="admin-editor-body" class="space-y-3"></div>
+                    <div id="admin-cat-editor" class="space-y-3"></div>
                 </div>
             </div>
         </div>
@@ -99,8 +102,14 @@
 <script>
     const socket = io();
     let currentCat = 'subJunior';
+    let isAutoCalc = true;
+
+    // Hard-coded to only two teams
     let festData = {
-        overall: [{ name: "ASKARIYYA", points: 0 }, { name: "KUTHAIBA", points: 0 }],
+        overall: [
+            { name: "ASKARIYYA", points: 0 }, 
+            { name: "KUTHAIBA", points: 0 }
+        ],
         categories: { subJunior: [], junior: [], senior: [] }
     };
 
@@ -108,112 +117,135 @@
         if(document.getElementById('pass-input').value === "783asu") {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('main-content').classList.remove('hidden');
-        } else { alert("ACCESS DENIED: INVALID SYSTEM KEY"); }
+            renderAdminCat(currentCat);
+        } else { 
+            alert("Security Error: Invalid Key"); 
+        }
     }
 
-    socket.on('initData', (data) => {
-        if(data && data.categories) festData = data;
-        render();
+    function toggleCalcMode() {
+        isAutoCalc = !isAutoCalc;
+        const btn = document.getElementById('calc-toggle');
+        btn.innerText = isAutoCalc ? "AUTO-CALC ON" : "MANUAL OVERRIDE";
+        btn.className = isAutoCalc ? "bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black" : "bg-orange-500 text-slate-950 px-4 py-2 rounded-xl text-[10px] font-black";
+        if(isAutoCalc) autoCalculate();
+        else updateMainUI();
+    }
+
+    socket.on('initData', (data) => { 
+        // If the incoming data has 3 teams (old DB data), we force it to 2 teams
+        if (data && data.overall && data.overall.length !== 2) {
+             console.log("Old data detected. Resetting to 2 teams locally.");
+        } else {
+             festData = data; 
+        }
+        
+        if(isAutoCalc) autoCalculate();
+        else { updateMainUI(); renderAdminCat(currentCat); }
     });
 
-    function switchCat(cat) {
-        currentCat = cat;
-        render();
-    }
-
     function autoCalculate() {
+        if(!isAutoCalc) return;
         let totals = { "ASKARIYYA": 0, "KUTHAIBA": 0 };
-        Object.values(festData.categories).forEach(category => {
-            category.forEach(p => {
-                const team = (p.team || "").toUpperCase().trim();
-                if(totals.hasOwnProperty(team)) totals[team] += (parseInt(p.pts) || 0);
+        Object.keys(festData.categories).forEach(cat => {
+            festData.categories[cat].forEach(p => {
+                const team = p.team ? p.team.toUpperCase().trim() : "";
+                if (totals.hasOwnProperty(team)) totals[team] += (parseInt(p.pts) || 0);
             });
         });
         
+        // Reset overall array to exactly these two teams
         festData.overall = [
-            { name: "ASKARIYYA", points: totals["ASKARIYYA"] },
-            { name: "KUTHAIBA", points: totals["KUTHAIBA"] }
+            { name: "ASKARIYYA", points: totals["ASKARIYYA"] || 0 },
+            { name: "KUTHAIBA", points: totals["KUTHAIBA"] || 0 }
         ];
-        renderTotals();
+        
+        updateMainUI();
+        renderAdminCat(currentCat);
     }
 
-    function renderTotals() {
-        document.getElementById('admin-totals-grid').innerHTML = festData.overall.map(t => `
-            <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800">
-                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">${t.name}</p>
-                <p class="text-3xl font-[900] text-indigo-500 mono tabular-nums">${t.points}</p>
+    function updateMainUI() {
+        document.getElementById('admin-main-grid').innerHTML = festData.overall.map((t, i) => `
+            <div class="relative group">
+                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">${t.name}</label>
+                <div class="relative">
+                    <input type="number" value="${t.points}" 
+                        ${isAutoCalc ? 'readonly' : ''} 
+                        onchange="festData.overall[${i}].points = parseInt(this.value) || 0" 
+                        class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-2xl mono font-black text-indigo-400 ${isAutoCalc ? 'opacity-50 cursor-not-allowed' : 'focus:border-indigo-500'}">
+                    ${isAutoCalc ? '<div class="absolute right-4 top-4 text-[9px] font-black text-indigo-500/50 uppercase">AUTO</div>' : ''}
+                </div>
             </div>
         `).join('');
     }
 
-    function render() {
-        renderTotals();
-        
-        // Update category buttons UI
-        document.querySelectorAll('.cat-btn').forEach(b => b.className = 'cat-btn px-6 py-2.5 rounded-xl text-[10px] font-black transition-all bg-transparent text-slate-500');
-        document.getElementById('btn-' + currentCat).className = 'cat-btn px-6 py-2.5 rounded-xl text-[10px] font-black transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-600/20';
-
-        const search = document.getElementById('admin-search').value.toLowerCase();
-        const filtered = festData.categories[currentCat].map((p, i) => ({...p, originalIndex: i}))
-                         .filter(p => p.name.toLowerCase().includes(search) || p.team.toLowerCase().includes(search));
-
-        document.getElementById('admin-editor-body').innerHTML = filtered.map(p => `
-            <div class="grid grid-cols-12 gap-4 items-center bg-slate-900/40 p-2 rounded-xl border border-slate-800 hover:border-slate-600 transition-all">
-                <div class="col-span-1 text-[10px] font-bold text-slate-600 mono pl-2">${p.originalIndex + 1}</div>
-                <div class="col-span-5">
-                    <input type="text" value="${p.name}" onchange="festData.categories['${currentCat}'][${p.originalIndex}].name = this.value" 
-                    class="input-field w-full text-xs font-bold py-2 uppercase">
-                </div>
-                <div class="col-span-3">
-                    <input type="text" value="${p.team}" onchange="festData.categories['${currentCat}'][${p.originalIndex}].team = this.value.toUpperCase(); autoCalculate();" 
-                    class="input-field w-full text-[10px] font-black text-indigo-400 py-2 uppercase">
-                </div>
-                <div class="col-span-2">
-                    <input type="number" value="${p.pts}" onchange="festData.categories['${currentCat}'][${p.originalIndex}].pts = parseInt(this.value) || 0; autoCalculate();" 
-                    class="input-field w-full text-center font-black text-emerald-400 py-2 mono">
-                </div>
-                <div class="col-span-1 text-right pr-2">
-                    <button onclick="deleteEntry(${p.originalIndex})" class="text-slate-600 hover:text-red-500 transition-colors">✕</button>
-                </div>
-            </div>
-        `).join('') || `<div class="text-center py-10 text-slate-600 uppercase text-[10px] font-black italic tracking-widest">No participants found in this category</div>`;
-    }
-
-    function deleteEntry(index) {
-        if(confirm("Confirm deletion of participant?")) {
-            festData.categories[currentCat].splice(index, 1);
-            autoCalculate();
-            render();
+    function deleteEntry(catId, index) {
+        if(confirm("Permanently delete this participant?")) {
+            festData.categories[catId].splice(index, 1);
+            if(isAutoCalc) autoCalculate();
+            else renderAdminCat(currentCat);
         }
     }
 
-    function importBulk() {
-        const input = document.getElementById('bulk-input').value;
-        const lines = input.split('\n');
+    function renderAdminCat(catId) {
+        currentCat = catId;
+        const search = document.getElementById('admin-search').value.toLowerCase();
+        
+        document.querySelectorAll('.cat-btn').forEach(btn => btn.className = 'cat-btn px-6 py-2 rounded-lg text-[10px] font-black bg-transparent text-slate-500 hover:text-slate-300');
+        if(document.getElementById('btn-' + catId)) {
+            document.getElementById('btn-' + catId).className = 'cat-btn px-6 py-2 rounded-lg text-[10px] font-black bg-indigo-600 text-white shadow-lg shadow-indigo-600/20';
+        }
+
+        const filtered = (festData.categories[catId] || []).map((p, originalIndex) => ({...p, originalIndex}))
+            .filter(p => p.name.toLowerCase().includes(search) || (p.team && p.team.toLowerCase().includes(search)));
+
+        let html = `
+            <div class="grid grid-cols-12 gap-4 mb-2 text-[9px] font-black text-slate-500 uppercase px-4 tracking-[0.2em]">
+                <div class="col-span-1">ID</div><div class="col-span-5">Name</div><div class="col-span-3">Team</div><div class="col-span-2">Points</div><div class="col-span-1 text-center">X</div>
+            </div>
+        `;
+
+        html += filtered.map((p) => `
+            <div class="grid grid-cols-12 gap-4 items-center bg-slate-800/40 p-2 rounded-2xl border border-slate-700 hover:border-slate-500 transition-all group">
+                <div class="col-span-1 text-[10px] font-bold text-slate-600 mono px-2">${p.originalIndex + 1}</div>
+                <div class="col-span-5"><input type="text" value="${p.name}" onchange="festData.categories['${catId}'][${p.originalIndex}].name = this.value" class="input-field w-full text-xs font-semibold"></div>
+                <div class="col-span-3"><input type="text" value="${p.team}" onchange="festData.categories['${catId}'][${p.originalIndex}].team = this.value.toUpperCase(); if(isAutoCalc) autoCalculate();" class="input-field w-full text-[10px] uppercase font-bold text-indigo-300"></div>
+                <div class="col-span-2"><input type="number" value="${p.pts}" onchange="festData.categories['${catId}'][${p.originalIndex}].pts = parseInt(this.value) || 0; if(isAutoCalc) autoCalculate();" class="input-field w-full font-black text-indigo-400 text-center mono"></div>
+                <div class="col-span-1 flex justify-center"><button onclick="deleteEntry('${catId}', ${p.originalIndex})" class="text-slate-600 hover:text-red-500 transition-colors">✕</button></div>
+            </div>
+        `).join('');
+
+        document.getElementById('admin-cat-editor').innerHTML = html || `
+            <div class="text-center py-20 border-2 border-dashed border-slate-800 rounded-3xl">
+                <p class="text-slate-600 text-sm font-bold uppercase tracking-widest">No participant data available</p>
+            </div>
+        `;
+    }
+
+    function importBulk(catId) {
+        const text = document.getElementById('bulk-input').value;
+        const lines = text.split('\n');
         lines.forEach(line => {
             if(line.includes(',')) {
-                const [n, t] = line.split(',');
-                if(n && t) {
-                    festData.categories[currentCat].push({
-                        name: n.trim().toUpperCase(),
-                        team: t.trim().toUpperCase(),
-                        pts: 0
-                    });
+                const [name, team] = line.split(',');
+                if(name && team) {
+                    festData.categories[catId].push({ name: name.trim(), team: team.trim().toUpperCase(), pts: 0 });
                 }
             }
         });
         document.getElementById('bulk-input').value = "";
-        autoCalculate();
-        render();
+        if(isAutoCalc) autoCalculate();
+        else renderAdminCat(currentCat);
     }
 
-    function saveData(e) {
-        const btn = e.target;
+    function saveData(event) {
         socket.emit('updateData', festData);
-        btn.innerText = "DATABASE SYNCED!";
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "DATABASE OVERWRITTEN!";
         btn.classList.replace('bg-emerald-500', 'bg-white');
         setTimeout(() => {
-            btn.innerText = "BROADCAST CHANGES";
+            btn.innerHTML = originalText;
             btn.classList.replace('bg-white', 'bg-emerald-500');
         }, 2000);
     }
