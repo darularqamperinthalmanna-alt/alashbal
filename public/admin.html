@@ -18,7 +18,6 @@
         #login-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 100; display: flex; align-items: center; justify-content: center; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
@@ -72,7 +71,7 @@
             <div class="bg-slate-800/50 p-6 rounded-3xl border border-dashed border-slate-700">
                 <h3 class="font-black mb-4 uppercase text-xs text-slate-300">Fast Bulk Input</h3>
                 <p class="text-[10px] text-slate-500 mb-3 leading-relaxed">Format: <code class="text-indigo-400 font-bold italic">Name, Team</code> (one per line)</p>
-                <textarea id="bulk-input" rows="5" class="w-full bg-slate-900 p-4 rounded-xl text-white text-xs mb-4 border border-slate-700 focus:border-indigo-500 outline-none" placeholder="John Doe, ASKARIYYA&#10;Jane Smith, KUTHAIBA"></textarea>
+                <textarea id="bulk-input" rows="5" class="w-full bg-slate-900 p-4 rounded-xl text-white text-xs mb-4 border border-slate-700 focus:border-indigo-500 outline-none" placeholder="Participant Name, ASKARIYYA&#10;Participant Name, KUTHAIBA"></textarea>
                 <button onclick="importBulk(currentCat)" class="w-full bg-slate-700 hover:bg-slate-600 p-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Add to List</button>
             </div>
         </div>
@@ -104,8 +103,13 @@
     const socket = io();
     let currentCat = 'subJunior';
     let isAutoCalc = true;
+
+    // Hard-coded to only two teams
     let festData = {
-        overall: [{ name: "ASKARIYYA", points: 0 }, { name: "KUTHAIBA", points: 0 }],
+        overall: [
+            { name: "ASKARIYYA", points: 0 }, 
+            { name: "KUTHAIBA", points: 0 }
+        ],
         categories: { subJunior: [], junior: [], senior: [] }
     };
 
@@ -129,7 +133,13 @@
     }
 
     socket.on('initData', (data) => { 
-        festData = data; 
+        // If the incoming data has 3 teams (old DB data), we force it to 2 teams
+        if (data && data.overall && data.overall.length !== 2) {
+             console.log("Old data detected. Resetting to 2 teams locally.");
+        } else {
+             festData = data; 
+        }
+        
         if(isAutoCalc) autoCalculate();
         else { updateMainUI(); renderAdminCat(currentCat); }
     });
@@ -143,7 +153,13 @@
                 if (totals.hasOwnProperty(team)) totals[team] += (parseInt(p.pts) || 0);
             });
         });
-        festData.overall.forEach(t => t.points = totals[t.name] || 0);
+        
+        // Reset overall array to exactly these two teams
+        festData.overall = [
+            { name: "ASKARIYYA", points: totals["ASKARIYYA"] || 0 },
+            { name: "KUTHAIBA", points: totals["KUTHAIBA"] || 0 }
+        ];
+        
         updateMainUI();
         renderAdminCat(currentCat);
     }
@@ -226,7 +242,7 @@
         socket.emit('updateData', festData);
         const btn = event.currentTarget;
         const originalText = btn.innerHTML;
-        btn.innerHTML = "DATABASE UPDATED!";
+        btn.innerHTML = "DATABASE OVERWRITTEN!";
         btn.classList.replace('bg-emerald-500', 'bg-white');
         setTimeout(() => {
             btn.innerHTML = originalText;
