@@ -32,12 +32,11 @@ const FestSchema = new mongoose.Schema({
 });
 const DataModel = mongoose.model('FestData', FestSchema);
 
-// Updated to match your new index.html team names
+// UPDATED TO TWO TEAMS: ASKARIYYA AND KUTHAIBA
 let festData = {
     overall: [
-        { name: "Team Emerald", points: 0 },
-        { name: "Team Ruby", points: 0 },
-        { name: "Team Sapphire", points: 0 }
+        { name: "ASKARIYYA", points: 0 },
+        { name: "KUTHAIBA", points: 0 }
     ],
     categories: { subJunior: [], junior: [], senior: [] }
 };
